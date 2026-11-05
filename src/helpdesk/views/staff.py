@@ -233,7 +233,7 @@ def dashboard(request):
         .order_by(user_tickets_closed_sort)
     )
 
-    user_queues = huser.get_queues()
+    user_queues = huser.accessible_queues()
 
     unassigned_tickets = active_tickets.filter(
         assigned_to__isnull=True, queue__in=user_queues
@@ -245,12 +245,13 @@ def dashboard(request):
         kbitems = huser.get_assigned_kb_items()
 
     # all tickets, reported by current user
-    all_tickets_reported_by_current_user = ""
+    all_tickets_reported_by_current_user = Ticket.objects.none()
     email_current_user = request.user.email
     if email_current_user:
         all_tickets_reported_by_current_user = (
             Ticket.objects.select_related("queue")
             .filter(
+                huser.accessible_tickets_q(),
                 submitter_email=email_current_user,
             )
             .order_by(all_tickets_reported_sort)

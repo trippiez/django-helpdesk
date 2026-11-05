@@ -33,17 +33,35 @@ You will need to install the `uv` package manager to simplify setting up the dem
 If you have not already created a virtual environment then run this command:
     uv venv
 
-To start up a demo project server, run this command:
+**Running The Demo Project** To start up a demo project server, run this command:
 
     make rundemo
 
-or with docker::
-
-    docker build --file standalone/Dockerfile -t demodesk ..
-    docker run --rm -v "$PWD:/app" -p 8080:8080 demodesk
-
 then pointing your web browser at http://localhost:8080 (log in as user
 `admin` with password `Pa33w0rd`, defined in the `demo.json` fixture file).
+
+**Docker Compose** or with docker compose::
+
+    cd dockerized
+    ./setup.sh
+    docker compose up
+
+See `dockerized documentation <./docs/dockerized.rst>`_ for instructions on creating your first superuser.
+Login at https://localhost
+
+**Raw Docker** or with docker::
+
+    docker run -d --name helpdesk-db -e POSTGRES_PASSWORD=changeme -p 5432:5432 postgres:17
+    docker build --file dockerized/Dockerfile -t demodesk ..
+    docker run -d --name demodesk --network host \
+        -e DJANGO_HELPDESK_SECRET_KEY=changeme \
+        -e POSTGRES_HOST=localhost \
+        -e POSTGRES_PASSWORD=changeme \
+        demodesk
+    docker exec -it demodesk python3 /opt/django-helpdesk/dockerized/manage.py createsuperuser
+
+Login at http://localhost:8080 then create a queue in the admin panel
+
 
 For more information and options, please read the `demo/README.rst` file.
 
@@ -60,11 +78,11 @@ to alert you to this shortcoming. There is no way around it, sorry.
 Installation
 ------------
 
-* |standalone_icon| For **standalone** installation, refer to `standalone documentation <./docs/standalone.rst>`_.
+* |dockerized_icon| For **dockerized** installation, refer to `dockerized documentation <./docs/dockerized.rst>`_.
 
 * |django_icon| To **integrate** with an existing Django application, follow the guidelines in `installation documentation <./docs/install.rst>`_ and `configuration documentation <./docs/configuration.rst>`_.
 
-.. |standalone_icon| image:: src/helpdesk/static/helpdesk/img/icon512.png
+.. |dockerized_icon| image:: src/helpdesk/static/helpdesk/img/icon512.png
    :height: 24px
    :width: 24px
    :align: middle
