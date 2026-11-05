@@ -27,13 +27,13 @@ make static-vendor
 Run all public ticket creation scenarios:
 
 ```bash
-uv run --group e2e quicktest.py e2e.test_public_ticket_creation -v 2
+uv run --group e2e quicktest.py tests.e2e.test_public_ticket_creation -v 2
 ```
 
 To watch the browser with a one-second delay between actions:
 
 ```bash
-HEADED=1 SLOW_MO=1000 uv run --group e2e quicktest.py e2e.test_public_ticket_creation -v 2
+HEADED=1 SLOW_MO=1000 uv run --group e2e quicktest.py tests.e2e.test_public_ticket_creation -v 2
 ```
 
 `HEADED=1` opens the browser window. `SLOW_MO` is a delay in milliseconds;
@@ -44,5 +44,5 @@ package's `load_tests` hook. Run each browser module explicitly, as above.
 The `e2e` CI job installs Chromium and runs these tests separately from the
 backend matrix.
 
-The image scenario uses `e2e/fixtures/ticket-attachment.png`. Include this small PNG
+The image scenario uses `tests/e2e/fixtures/ticket-attachment.png`. Include this small PNG
 alongside the test code when submitting changes.

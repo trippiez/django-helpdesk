@@ -64,7 +64,7 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
             self._fill_ticket_form(
                 page, queue=queue, email=email, title=title, description=description
             )
-            page.get_by_role("button", name="Submit Ticket").click()
+            page.get_by_role("button", name="Create Ticket", exact=True).click()
             self._assert_ticket_details(
                 page, queue=queue, email=email, title=title, description=description
             )
@@ -93,7 +93,7 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
             page.get_by_label("Attach File", exact=True).set_input_files(
                 str(image_path)
             )
-            page.get_by_role("button", name="Submit Ticket").click()
+            page.get_by_role("button", name="Create Ticket", exact=True).click()
             self._assert_ticket_details(
                 page, queue=queue, email=email, title=title, description=description
             )
@@ -147,18 +147,19 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
             )
             page.get_by_label("Priority", exact=True).select_option(str(priority))
             page.get_by_label("Due on", exact=True).fill(due_date_input)
-            page.get_by_role("button", name="Submit Ticket").click()
+            page.get_by_role("button", name="Create Ticket", exact=True).click()
 
             ticket_details = self._assert_ticket_details(
                 page, queue=queue, email=email, title=title, description=description
             )
-            expect(
-                ticket_details.get_by_role("cell", name="2. High", exact=True)
-            ).to_be_visible()
-            due_date_row = ticket_details.get_by_role("row").filter(
-                has=page.get_by_role("rowheader", name="Due On", exact=True)
+            priority_details = ticket_details.locator(".col").filter(
+                has=page.get_by_text("Priority", exact=True)
             )
-            expect(due_date_row.get_by_role("cell")).to_contain_text(displayed_due_date)
+            expect(priority_details).to_contain_text("2. High")
+            due_date_details = ticket_details.locator(".col").filter(
+                has=page.get_by_text("Due On", exact=True)
+            )
+            expect(due_date_details).to_contain_text(displayed_due_date)
 
         ticket = self._assert_saved_ticket(
             queue=queue, email=email, title=title, description=description
@@ -180,13 +181,13 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
             self._fill_ticket_form(
                 page, queue=queue, email=email, title=title, description=""
             )
-            page.get_by_role("button", name="Submit Ticket").click()
+            page.get_by_role("button", name="Create Ticket", exact=True).click()
 
             # Native required-field validation blocks submission before any POST.
             description_input = page.get_by_label(
                 "Description of your issue", exact=True
             )
-            expect(page).to_have_url(self.live_server_url + reverse("helpdesk:home"))
+            expect(page).to_have_url(self.live_server_url + reverse("helpdesk:submit"))
             expect(description_input).to_be_empty()
             expect(description_input).to_be_focused()
             self.assertTrue(
@@ -213,7 +214,7 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
 
             # Correct only the missing field; the retained values must be reused.
             description_input.fill(description)
-            page.get_by_role("button", name="Submit Ticket").click()
+            page.get_by_role("button", name="Create Ticket", exact=True).click()
             self._assert_ticket_details(
                 page, queue=queue, email=email, title=title, description=description
             )
@@ -239,6 +240,7 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
 
     def _fill_ticket_form(self, page, *, queue, email, title, description):
         page.goto(self.live_server_url + reverse("helpdesk:home"))
+        page.get_by_role("link", name="Create a ticket", exact=True).click()
         page.get_by_label("Queue", exact=True).select_option(str(queue.pk))
         page.get_by_label("Your E-Mail Address", exact=True).fill(email)
         page.get_by_label("Summary of the problem", exact=True).fill(title)
@@ -248,13 +250,12 @@ class PublicTicketCreationTests(StaticLiveServerTestCase):
         view_url = self.live_server_url + reverse("helpdesk:public_view")
         expect(page).to_have_url(re.compile(rf"^{re.escape(view_url)}\?.+"))
 
-        # Locate the details table by its ticket header.
-        ticket_details = page.get_by_role("table").filter(
-            has=page.get_by_role("columnheader").filter(has_text=title)
-        )
+        ticket_details = page.locator("#content-wrapper")
         expect(ticket_details).to_have_count(1)
         expect(ticket_details).to_be_visible()
-        expect(ticket_details).to_contain_text(title)
+        expect(
+            ticket_details.get_by_role("heading", name=title, exact=True)
+        ).to_be_visible()
         expect(ticket_details).to_contain_text(description)
         expect(ticket_details).to_contain_text(email)
         expect(ticket_details).to_contain_text(queue.title)
