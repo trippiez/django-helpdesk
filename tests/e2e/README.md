@@ -36,17 +36,15 @@ To watch the browser with a one-second delay between actions:
 HEADED=1 SLOW_MO=1000 uv run --group e2e quicktest.py tests.e2e.test_public_ticket_creation -v 2
 ```
 
-`HEADED=1` opens the browser window. `SLOW_MO` is a delay in milliseconds;
-the defaults are headless execution with no delay.
-
 Browser tests are excluded from the default `make test` discovery by the
 package's `load_tests` hook. Run each browser module explicitly, as above.
 The `e2e` CI job installs Chromium and runs these tests separately from the
 backend matrix.
 
-The staff reply scenario logs in as an employee, sends a public reply, and checks
-that the customer can read it after reloading in a separate anonymous context.
-Run it on its own with:
+The staff reply scenarios log in as an employee and check that the customer can
+read a public reply, while a private reply stays hidden before and after reloading
+in a separate anonymous context. Both replies are checked in the employee's view
+and in the database. Run these scenarios with:
 
 ```bash
 uv run --group e2e quicktest.py tests.e2e.test_staff_ticket_reply -v 2
